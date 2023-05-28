@@ -1,0 +1,25 @@
+{
+  "name": "docker-snap",
+  "version": "0.0.1",
+  "description": "A utility for managing Docker volumes and images backup and restore",
+  "main": "index.js",
+  "bin": {
+    "ds": "./bin/ds"
+  },
+  "author": "Cédric Tailly",
+  "license": "MIT",
+  "keywords": [
+    "docker",
+    "backup",
+    "restore",
+    "volumes",
+    "images",
+    "snapshot"
+  ],
+  "dependencies": {
+    "chalk": "4",
+    "commander": "^10.0.1",
+    "fast-glob": "^3.2.12",
+    "micromatch": "^4.0.5"
+  }
+}
