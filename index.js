@@ -99,9 +99,8 @@ exports.saveVolumes = async (filter, directory, overwrite = false) => {
       throw new Error(`File already exists:\n${existings.map(volume => `  ${volume}.tgz`).join("\n")}`);
   }
 
-  volumes.forEach(volume => {
-    ds.saveVolume(volume, path.join(directory, volume + ".tgz"), overwrite);
-  });
+  for (const volume of volumes)
+    await ds.saveVolume(volume, path.join(directory, volume + ".tgz"), overwrite);
 };
 
 exports.loadVolumes = async (files, overwrite = false) => {
