@@ -98,8 +98,14 @@ volumesCommands
   .option("-t, --timestamp", "Create a subdirectory with the current timestamp")
   .option("-f, --force", "Overwrite existing backup files")
   .action(async (filter, directory, options) => {
-    directory = path.resolve(directory || ".", options.timestamp ? ds.createTimestamp() : undefined);
+
+    directory = path.resolve(directory || ".");
+
+    if (options.timestamp)
+      directory = path.join(directory, ds.createTimestamp());
+
     fs.mkdirSync(directory, {recursive: true});
+
     await ds.saveVolumes(filter, directory, options.force);
   });
 
