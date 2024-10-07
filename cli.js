@@ -5,6 +5,11 @@ const readline  = require("readline");
 const {program} = require("commander");
 const chalk     = require("chalk");
 
+const colors = {
+  title: chalk.white.bold,
+  error: chalk.redBright,
+};
+
 const ds  = require(".");
 const pkg = require("./package.json");
 
@@ -45,7 +50,7 @@ volumesCommands
     const volumes = await ds.listVolumes(filter);
 
     if (volumes.length === 0)
-      return console.log(chalk.redBright(`No volumes matching '${filter}' found.`));
+      return console.log(colors.error(`No volumes matching '${filter}' found.`));
 
     console.log();
     console.log(`Volumes matching "${filter}":\n${volumes.map(v => "  " + v).join("\n")}`);
@@ -56,7 +61,7 @@ volumesCommands
       output: process.stdout,
     });
 
-    rl.question(chalk.redBright("Confirm deletion (y/N): "), async answer => {
+    rl.question(colors.error("Confirm deletion (y/N): "), async answer => {
       rl.close();
       if (answer.toLowerCase() === "y") {
         for (const volume of volumes)
@@ -97,9 +102,16 @@ volumesCommands
   .description("Save Docker volumes matching the filter")
   .option("-t, --timestamp", "Create a subdirectory with the current timestamp")
   .option("-f, --force", "Overwrite existing backup files")
+  .option("-l, --limit <n>", "Limit the number of backups (--timestamp required)", parseInt)
   .action(async (filter, directory, options) => {
 
     directory = path.resolve(directory || ".");
+
+    if (!options.timestamp && options.limit !== undefined)
+      throw new Error("--limit requires --timestamp");
+
+    if (options.limit !== undefined && options.limit <= 0)
+      throw new Error("--limit must be greater than zero");
 
     if (options.timestamp)
       directory = path.join(directory, ds.createTimestamp());
@@ -107,6 +119,14 @@ volumesCommands
     fs.mkdirSync(directory, {recursive: true});
 
     await ds.saveVolumes(filter, directory, options.force);
+
+    if (options.limit !== undefined) {
+
+      const entries = ds.readTimestamps(path.dirname(directory));
+
+      for (const entry of entries.slice(0, -options.limit))
+        fs.rmSync(entry.directory, {recursive: true});
+    }
   });
 
 volumesCommands
@@ -135,7 +155,12 @@ imagesCommands
 
 // --- Common --------------------------------------------------------------- //
 
-program.addHelpText("beforeAll", chalk.white.bold([
+// process.on("unhandledRejection", err => {
+//   console.error(colors.error(err.message));
+//   process.exit(1);
+// });
+
+program.addHelpText("beforeAll", colors.title([
   "",
   `Docker Snap v${pkg.version}, by ${pkg.author}`,
   "",
